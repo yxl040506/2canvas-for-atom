@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [1.0.0](https://github.com/niklasvh/html2canvas/compare/v1.0.0-rc.5...v1.0.0) (2019-12-25)
+
+
+### Bug Fixes
+
+* [#1868](https://github.com/niklasvh/html2canvas/issues/1868) Clone node, Setting className for SVG element raises error ([#2079](https://github.com/niklasvh/html2canvas/issues/2079)) ([f139b51](https://github.com/niklasvh/html2canvas/commit/f139b51))
+
+
+
 # [1.0.0-rc.5](https://github.com/niklasvh/html2canvas/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2019-09-27)
 
 
