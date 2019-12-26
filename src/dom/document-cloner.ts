@@ -56,63 +56,64 @@ export class DocumentCloner {
     }
 
     toIFrame(ownerDocument: Document, windowSize: Bounds): Promise<HTMLIFrameElement> {
-        const iframe: HTMLIFrameElement = createIFrameContainer(ownerDocument, windowSize);
+        // if (document.getElementsByClassName('html2canvas-container').length > 0) {
+        //     const iframeLoad = iframeCacheLoader(document.getElementsByClassName('html2canvas-container')[0] as any)
+        //     return iframeLoad as Promise<HTMLIFrameElement> //
+        // } else {
+            const iframe: HTMLIFrameElement = createIFrameContainer(ownerDocument, windowSize);
 
-        if (!iframe.contentWindow) {
-            return Promise.reject(`Unable to find iframe window`);
-        }
+            if (!iframe.contentWindow) {
+                return Promise.reject(`Unable to find iframe window`);
+            }
 
-        const scrollX = (ownerDocument.defaultView as Window).pageXOffset;
-        const scrollY = (ownerDocument.defaultView as Window).pageYOffset;
+            const scrollX = (ownerDocument.defaultView as Window).pageXOffset;
+            const scrollY = (ownerDocument.defaultView as Window).pageYOffset;
 
-        const cloneWindow = iframe.contentWindow;
-        const documentClone: Document = cloneWindow.document;
+            const cloneWindow = iframe.contentWindow;
+            const documentClone: Document = cloneWindow.document;
 
-        /* Chrome doesn't detect relative background-images assigned in inline <style> sheets when fetched through getComputedStyle
-         if window url is about:blank, we can assign the url to current by writing onto the document
-         */
+            /* Chrome doesn't detect relative background-images assigned in inline <style> sheets when fetched through getComputedStyle
+            if window url is about:blank, we can assign the url to current by writing onto the document
+            */
 
-        const iframeLoad = iframeLoader(iframe).then(async () => {
-            this.scrolledElements.forEach(restoreNodeScroll);
-            if (cloneWindow) {
-                cloneWindow.scrollTo(windowSize.left, windowSize.top);
-                if (
-                    /(iPad|iPhone|iPod)/g.test(navigator.userAgent) &&
-                    (cloneWindow.scrollY !== windowSize.top || cloneWindow.scrollX !== windowSize.left)
-                ) {
-                    documentClone.documentElement.style.top = -windowSize.top + 'px';
-                    documentClone.documentElement.style.left = -windowSize.left + 'px';
-                    documentClone.documentElement.style.position = 'absolute';
+            const iframeLoad = iframeLoader(iframe).then(async () => {
+                this.scrolledElements.forEach(restoreNodeScroll);
+                if (cloneWindow) {
+                    cloneWindow.scrollTo(windowSize.left, windowSize.top);
+                    if (
+                        /(iPad|iPhone|iPod)/g.test(navigator.userAgent) &&
+                        (cloneWindow.scrollY !== windowSize.top || cloneWindow.scrollX !== windowSize.left)
+                    ) {
+                        documentClone.documentElement.style.top = -windowSize.top + 'px';
+                        documentClone.documentElement.style.left = -windowSize.left + 'px';
+                        documentClone.documentElement.style.position = 'absolute';
+                    }
                 }
-            }
+                const onclone = this.options.onclone;
 
-            const onclone = this.options.onclone;
+                if (typeof this.clonedReferenceElement === 'undefined') {
+                    return Promise.reject(`Error finding the ${this.referenceElement.nodeName} in the cloned document`);
+                }
+                if (documentClone.fonts && documentClone.fonts.ready) {
+                    await documentClone.fonts.ready;
+                }
+                if (typeof onclone === 'function') {
+                    return Promise.resolve()
+                        .then(() => onclone(documentClone))
+                        .then(() => iframe);
+                }
+                // this.iframeCached = iframe
+                return iframe;
+            });
 
-            if (typeof this.clonedReferenceElement === 'undefined') {
-                return Promise.reject(`Error finding the ${this.referenceElement.nodeName} in the cloned document`);
-            }
-
-            if (documentClone.fonts && documentClone.fonts.ready) {
-                await documentClone.fonts.ready;
-            }
-
-            if (typeof onclone === 'function') {
-                return Promise.resolve()
-                    .then(() => onclone(documentClone))
-                    .then(() => iframe);
-            }
-
-            return iframe;
-        });
-
-        documentClone.open();
-        documentClone.write(`${serializeDoctype(document.doctype)}<html></html>`);
-        // Chrome scrolls the parent document for some reason after the write to the cloned window???
-        restoreOwnerScroll(this.referenceElement.ownerDocument, scrollX, scrollY);
-        documentClone.replaceChild(documentClone.adoptNode(this.documentElement), documentClone.documentElement);
-        documentClone.close();
-
-        return iframeLoad;
+            documentClone.open();
+            documentClone.write(`${serializeDoctype(document.doctype)}<html></html>`);
+            // Chrome scrolls the parent document for some reason after the write to the cloned window???
+            restoreOwnerScroll(this.referenceElement.ownerDocument, scrollX, scrollY);
+            documentClone.replaceChild(documentClone.adoptNode(this.documentElement), documentClone.documentElement);
+            documentClone.close();
+            return iframeLoad;
+        // }
     }
 
     createElementClone(node: HTMLElement): HTMLElement {
@@ -465,7 +466,6 @@ const iframeLoader = (iframe: HTMLIFrameElement): Promise<HTMLIFrameElement> => 
         }
 
         const documentClone = cloneWindow.document;
-
         cloneWindow.onload = iframe.onload = documentClone.onreadystatechange = () => {
             cloneWindow.onload = iframe.onload = documentClone.onreadystatechange = null;
             const interval = setInterval(() => {
@@ -477,6 +477,12 @@ const iframeLoader = (iframe: HTMLIFrameElement): Promise<HTMLIFrameElement> => 
         };
     });
 };
+
+// const iframeCacheLoader = (iframe: HTMLIFrameElement) => {
+//     return new Promise((resolve) => {
+//         resolve(iframe);
+//     });
+// }
 
 export const copyCSSStyles = (style: CSSStyleDeclaration, target: HTMLElement): HTMLElement => {
     // Edge does not provide value for cssText

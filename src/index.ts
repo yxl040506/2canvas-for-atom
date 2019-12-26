@@ -7,7 +7,7 @@ import {Logger} from './core/logger';
 import {CacheStorage, ResourceOptions} from './core/cache-storage';
 import {CanvasRenderer, RenderOptions} from './render/canvas/canvas-renderer';
 import {ForeignObjectRenderer} from './render/canvas/foreignobject-renderer';
-
+// let cloneCached:any = null
 export type Options = CloneOptions &
     RenderOptions &
     ResourceOptions & {
@@ -80,20 +80,27 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
 
     Logger.create({id: instanceName, enabled: options.logging});
     Logger.getInstance(instanceName).debug(`Starting document clone`);
-    const documentCloner = new DocumentCloner(element, {
-        id: instanceName,
-        onclone: options.onclone,
-        ignoreElements: options.ignoreElements,
-        inlineImages: options.foreignObjectRendering,
-        copyStyles: options.foreignObjectRendering
-    });
+    // start---------280ms-----------
+    // if(!(document.getElementsByClassName('html2canvas-container').length > 0) || !cloneCached) {
+    //     console.log('clone document')
+        const documentCloner = new DocumentCloner(element, {
+            id: instanceName,
+            onclone: options.onclone,
+            ignoreElements: options.ignoreElements,
+            inlineImages: options.foreignObjectRendering,
+            copyStyles: options.foreignObjectRendering
+        });
+    //     cloneCached = documentCloner
+    // }
+    // let documentCloner = cloneCached as DocumentCloner
+    // end ----------280ms-----------
     const clonedElement = documentCloner.clonedReferenceElement;
     if (!clonedElement) {
         return Promise.reject(`Unable to find element in cloned iframe`);
     }
-
+    console.time('zheliya')
     const container = await documentCloner.toIFrame(ownerDocument, windowBounds);
-
+    console.timeEnd('zheliya')
     // http://www.w3.org/TR/css3-background/#special-backgrounds
     const documentBackgroundColor = ownerDocument.documentElement
         ? parseColor(getComputedStyle(ownerDocument.documentElement).backgroundColor as string)
@@ -132,7 +139,6 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
     };
 
     let canvas;
-
     if (options.foreignObjectRendering) {
         Logger.getInstance(instanceName).debug(`Document cloned, using foreign object rendering`);
         const renderer = new ForeignObjectRenderer(renderOptions);
