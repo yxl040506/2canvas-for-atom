@@ -56,10 +56,12 @@ export class DocumentCloner {
     }
 
     toIFrame(ownerDocument: Document, windowSize: Bounds): Promise<HTMLIFrameElement> {
-        // if (document.getElementsByClassName('html2canvas-container').length > 0) {
-        //     const iframeLoad = iframeCacheLoader(document.getElementsByClassName('html2canvas-container')[0] as any)
-        //     return iframeLoad as Promise<HTMLIFrameElement> //
-        // } else {
+        if (document.getElementsByClassName('html2canvas-container').length > 0) {
+            const iframeLoad = iframeCacheLoader(document.getElementsByClassName(
+                'html2canvas-container'
+            )[0] as HTMLIFrameElement);
+            return iframeLoad as Promise<HTMLIFrameElement>;
+        } else {
             const iframe: HTMLIFrameElement = createIFrameContainer(ownerDocument, windowSize);
 
             if (!iframe.contentWindow) {
@@ -113,7 +115,7 @@ export class DocumentCloner {
             documentClone.replaceChild(documentClone.adoptNode(this.documentElement), documentClone.documentElement);
             documentClone.close();
             return iframeLoad;
-        // }
+        }
     }
 
     createElementClone(node: HTMLElement): HTMLElement {
@@ -478,11 +480,11 @@ const iframeLoader = (iframe: HTMLIFrameElement): Promise<HTMLIFrameElement> => 
     });
 };
 
-// const iframeCacheLoader = (iframe: HTMLIFrameElement) => {
-//     return new Promise((resolve) => {
-//         resolve(iframe);
-//     });
-// }
+const iframeCacheLoader = (iframe: HTMLIFrameElement) => {
+    return new Promise(resolve => {
+        resolve(iframe);
+    });
+}
 
 export const copyCSSStyles = (style: CSSStyleDeclaration, target: HTMLElement): HTMLElement => {
     // Edge does not provide value for cssText
