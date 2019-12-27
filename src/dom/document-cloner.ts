@@ -55,14 +55,14 @@ export class DocumentCloner {
         this.documentElement = this.cloneNode(element.ownerDocument.documentElement) as HTMLElement;
     }
 
-    toIFrame(ownerDocument: Document, windowSize: Bounds): Promise<HTMLIFrameElement> {
-        if (document.getElementsByClassName('html2canvas-container').length > 0) {
+    toIFrame(ownerDocument: Document, windowSize: Bounds, className?: string): Promise<HTMLIFrameElement> {
+        if (document.getElementsByClassName(className || '').length > 0) {
             const iframeLoad = iframeCacheLoader(document.getElementsByClassName(
-                'html2canvas-container'
+                className || ''
             )[0] as HTMLIFrameElement);
             return iframeLoad as Promise<HTMLIFrameElement>;
         } else {
-            const iframe: HTMLIFrameElement = createIFrameContainer(ownerDocument, windowSize);
+            const iframe: HTMLIFrameElement = createIFrameContainer(ownerDocument, windowSize, className);
 
             if (!iframe.contentWindow) {
                 return Promise.reject(`Unable to find iframe window`);
@@ -441,10 +441,9 @@ enum PseudoElementType {
     AFTER
 }
 
-const createIFrameContainer = (ownerDocument: Document, bounds: Bounds): HTMLIFrameElement => {
+const createIFrameContainer = (ownerDocument: Document, bounds: Bounds, className?: string): HTMLIFrameElement => {
     const cloneIframeContainer = ownerDocument.createElement('iframe');
-
-    cloneIframeContainer.className = 'html2canvas-container';
+    cloneIframeContainer.className = className || 'html2canvas-container';
     cloneIframeContainer.style.visibility = 'hidden';
     cloneIframeContainer.style.position = 'fixed';
     cloneIframeContainer.style.left = '-10000px';

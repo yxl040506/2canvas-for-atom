@@ -7,7 +7,7 @@ import {Logger} from './core/logger';
 import {CacheStorage, ResourceOptions} from './core/cache-storage';
 import {CanvasRenderer, RenderOptions} from './render/canvas/canvas-renderer';
 import {ForeignObjectRenderer} from './render/canvas/foreignobject-renderer';
-let cloneCached: any = null;
+let cloneCached:any = {};
 export type Options = CloneOptions &
     RenderOptions &
     ResourceOptions & {
@@ -15,6 +15,8 @@ export type Options = CloneOptions &
         foreignObjectRendering: boolean;
         logging: boolean;
         removeContainer?: boolean;
+    } & {
+        className?: string;
     };
 
 const parseColor = (value: string): Color => color.parse(Parser.create(value).parseComponentValue());
@@ -73,15 +75,16 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
         height: Math.ceil(height),
         id: instanceName
     };
-
     const options: Options = {...defaultOptions, ...resourceOptions, ...opts};
+    const className = options.className;
 
     const windowBounds = new Bounds(options.scrollX, options.scrollY, options.windowWidth, options.windowHeight);
 
     Logger.create({id: instanceName, enabled: options.logging});
     Logger.getInstance(instanceName).debug(`Starting document clone`);
     // start---------280ms-----------
-    if (!(document.getElementsByClassName('html2canvas-container').length > 0) || !cloneCached) {
+    const classNameTemp = (className || '') as any;
+    if (!(document.getElementsByClassName(classNameTemp).length > 0) || !cloneCached[classNameTemp]) {
         console.log('clone document');
         const documentCloner = new DocumentCloner(element, {
             id: instanceName,
@@ -90,16 +93,16 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
             inlineImages: options.foreignObjectRendering,
             copyStyles: options.foreignObjectRendering
         });
-        cloneCached = documentCloner;
+        cloneCached[classNameTemp] = documentCloner;
     }
-    let documentCloner = cloneCached as DocumentCloner;
+    let documentCloner = cloneCached[classNameTemp] as DocumentCloner;
     // end ----------280ms-----------
     const clonedElement = documentCloner.clonedReferenceElement;
     if (!clonedElement) {
         return Promise.reject(`Unable to find element in cloned iframe`);
     }
     console.time('zheliya');
-    const container = await documentCloner.toIFrame(ownerDocument, windowBounds);
+    const container = await documentCloner.toIFrame(ownerDocument, windowBounds, className);
     console.timeEnd('zheliya');
     // http://www.w3.org/TR/css3-background/#special-backgrounds
     const documentBackgroundColor = ownerDocument.documentElement
