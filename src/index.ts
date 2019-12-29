@@ -1,13 +1,14 @@
-import {Bounds, parseBounds, parseDocumentSize} from './css/layout/bounds';
-import {color, Color, COLORS, isTransparent} from './css/types/color';
-import {Parser} from './css/syntax/parser';
-import {CloneOptions, DocumentCloner} from './dom/document-cloner';
+import {parseBounds, parseDocumentSize} from './css/layout/bounds';
+// import {color, Color, COLORS, isTransparent} from './css/types/color';
+// import {color, Color} from './css/types/color';
+// import {Parser} from './css/syntax/parser';
+import {CloneOptions} from './dom/document-cloner';
 import {isBodyElement, isHTMLElement, parseTree} from './dom/node-parser';
 import {Logger} from './core/logger';
 import {CacheStorage, ResourceOptions} from './core/cache-storage';
 import {CanvasRenderer, RenderOptions} from './render/canvas/canvas-renderer';
 import {ForeignObjectRenderer} from './render/canvas/foreignobject-renderer';
-let cloneCached:any = {};
+// let cloneCached:any = {};
 export type Options = CloneOptions &
     RenderOptions &
     ResourceOptions & {
@@ -19,7 +20,7 @@ export type Options = CloneOptions &
         className?: string;
     };
 
-const parseColor = (value: string): Color => color.parse(Parser.create(value).parseComponentValue());
+// const parseColor = (value: string): Color => color.parse(Parser.create(value).parseComponentValue());
 
 const html2canvas = (element: HTMLElement, options: Partial<Options> = {}): Promise<HTMLCanvasElement> => {
     return renderElement(element, options);
@@ -76,54 +77,51 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
         id: instanceName
     };
     const options: Options = {...defaultOptions, ...resourceOptions, ...opts};
-    const className = options.className;
+    // const className = options.className;
 
-    const windowBounds = new Bounds(options.scrollX, options.scrollY, options.windowWidth, options.windowHeight);
+    // const windowBounds = new Bounds(options.scrollX, options.scrollY, options.windowWidth, options.windowHeight);
 
     Logger.create({id: instanceName, enabled: options.logging});
     Logger.getInstance(instanceName).debug(`Starting document clone`);
     // start---------280ms-----------
-    const classNameTemp = (className || '') as any;
-    if (!(document.getElementsByClassName(classNameTemp).length > 0) || !cloneCached[classNameTemp]) {
-        console.log('clone document');
-        const documentCloner = new DocumentCloner(element, {
-            id: instanceName,
-            onclone: options.onclone,
-            ignoreElements: options.ignoreElements,
-            inlineImages: options.foreignObjectRendering,
-            copyStyles: options.foreignObjectRendering
-        });
-        cloneCached[classNameTemp] = documentCloner;
-    }
-    let documentCloner = cloneCached[classNameTemp] as DocumentCloner;
+    // const classNameTemp = (className || '') as any;
+    // if (!(document.getElementsByClassName(classNameTemp).length > 0) || !cloneCached[classNameTemp]) {
+    //     const documentCloner = new DocumentCloner(element, {
+    //         id: instanceName,
+    //         onclone: options.onclone,
+    //         ignoreElements: options.ignoreElements,
+    //         inlineImages: options.foreignObjectRendering,
+    //         copyStyles: options.foreignObjectRendering
+    //     });
+    //     cloneCached[classNameTemp] = documentCloner;
+    // }
+    // let documentCloner = cloneCached[classNameTemp] as DocumentCloner;
     // end ----------280ms-----------
-    const clonedElement = documentCloner.clonedReferenceElement;
-    if (!clonedElement) {
-        return Promise.reject(`Unable to find element in cloned iframe`);
-    }
-    console.time('zheliya');
-    const container = await documentCloner.toIFrame(ownerDocument, windowBounds, className);
-    console.timeEnd('zheliya');
+    // const clonedElement = documentCloner.clonedReferenceElement;
+    // if (!clonedElement) {
+    //     return Promise.reject(`Unable to find element in cloned iframe`);
+    // }
+    // const container = await documentCloner.toIFrame(ownerDocument, windowBounds, className);
     // http://www.w3.org/TR/css3-background/#special-backgrounds
-    const documentBackgroundColor = ownerDocument.documentElement
-        ? parseColor(getComputedStyle(ownerDocument.documentElement).backgroundColor as string)
-        : COLORS.TRANSPARENT;
-    const bodyBackgroundColor = ownerDocument.body
-        ? parseColor(getComputedStyle(ownerDocument.body).backgroundColor as string)
-        : COLORS.TRANSPARENT;
+    // const documentBackgroundColor = ownerDocument.documentElement
+    //     ? parseColor(getComputedStyle(ownerDocument.documentElement).backgroundColor as string)
+    //     : COLORS.TRANSPARENT;
+    // const bodyBackgroundColor = ownerDocument.body
+    //     ? parseColor(getComputedStyle(ownerDocument.body).backgroundColor as string)
+    //     : COLORS.TRANSPARENT;
 
-    const bgColor = opts.backgroundColor;
-    const defaultBackgroundColor =
-        typeof bgColor === 'string' ? parseColor(bgColor) : bgColor === null ? COLORS.TRANSPARENT : 0xffffffff;
+    // const bgColor = opts.backgroundColor;
+    // const defaultBackgroundColor =
+    //     typeof bgColor === 'string' ? parseColor(bgColor) : bgColor === null ? COLORS.TRANSPARENT : 0xffffffff;
 
-    const backgroundColor =
-        element === ownerDocument.documentElement
-            ? isTransparent(documentBackgroundColor)
-                ? isTransparent(bodyBackgroundColor)
-                    ? defaultBackgroundColor
-                    : bodyBackgroundColor
-                : documentBackgroundColor
-            : defaultBackgroundColor;
+    const backgroundColor = null;
+    //     element === ownerDocument.documentElement
+    //         ? isTransparent(documentBackgroundColor)
+    //             ? isTransparent(bodyBackgroundColor)
+    //                 ? defaultBackgroundColor
+    //                 : bodyBackgroundColor
+    //             : documentBackgroundColor
+    //         : defaultBackgroundColor;
 
     const renderOptions = {
         id: instanceName,
@@ -145,18 +143,20 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
     if (options.foreignObjectRendering) {
         Logger.getInstance(instanceName).debug(`Document cloned, using foreign object rendering`);
         const renderer = new ForeignObjectRenderer(renderOptions);
-        canvas = await renderer.render(clonedElement);
+        canvas = await renderer.render(element);
     } else {
         Logger.getInstance(instanceName).debug(`Document cloned, using computed rendering`);
 
         CacheStorage.attachInstance(options.cache);
         Logger.getInstance(instanceName).debug(`Starting DOM parsing`);
-        const root = parseTree(clonedElement);
+        const root = parseTree(element);
+        // console.log('clonedElement', clonedElement, root);
+
         CacheStorage.detachInstance();
 
-        if (backgroundColor === root.styles.backgroundColor) {
-            root.styles.backgroundColor = COLORS.TRANSPARENT;
-        }
+        // if (backgroundColor === root.styles.backgroundColor) {
+        //     root.styles.backgroundColor = COLORS.TRANSPARENT;
+        // }
 
         Logger.getInstance(instanceName).debug(`Starting renderer`);
 
@@ -165,9 +165,9 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
     }
 
     if (options.removeContainer === true) {
-        if (!DocumentCloner.destroy(container)) {
-            Logger.getInstance(instanceName).error(`Cannot detach cloned iframe as it is not in the DOM anymore`);
-        }
+        // if (!DocumentCloner.destroy(container)) {
+        //     Logger.getInstance(instanceName).error(`Cannot detach cloned iframe as it is not in the DOM anymore`);
+        // }
     }
 
     Logger.getInstance(instanceName).debug(`Finished rendering`);
