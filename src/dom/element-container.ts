@@ -22,7 +22,7 @@ export class ElementContainer {
         this.elements = [];
         if (this.styles.transform !== null && isHTMLElementNode(element)) {
             // getBoundingClientRect takes transforms into account
-            element.style.transform = 'none';
+            // element.style.transform = 'none';
         }
         this.bounds = parseBounds(element);
         this.flags = 0;
