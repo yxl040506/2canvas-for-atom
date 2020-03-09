@@ -1,5 +1,9 @@
 html2canvas
 ===========
+改造过的html2canvas，主要是加快了截图速度
+1、去掉了将截图区域拷贝到iframe的操作
+2、去掉【为了解决跨域而进行的img拷贝、设置crossorigin操作】
+===========
 
 [Homepage](https://html2canvas.hertzen.com) | [Downloads](https://github.com/niklasvh/html2canvas/releases) | [Questions](http://stackoverflow.com/questions/tagged/html2canvas?sort=newest)
 

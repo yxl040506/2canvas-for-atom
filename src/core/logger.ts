@@ -22,7 +22,7 @@ export class Logger {
             // eslint-disable-next-line no-console
             if (typeof window !== 'undefined' && window.console && typeof console.debug === 'function') {
                 // eslint-disable-next-line no-console
-                console.debug(this.id, `${this.getTime()}ms`, ...args);
+                console.debug('@jd/html2canvas-for-atom', this.id, `${this.getTime()}ms`, ...args);
             } else {
                 this.info(...args);
             }

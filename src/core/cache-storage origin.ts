@@ -114,7 +114,6 @@ export class Cache {
         }
 
         let src = key;
-        console.log('useProxy', useProxy)
         if (useProxy) {
             src = await this.proxy(src);
             // console.log('src', src)
@@ -127,7 +126,6 @@ export class Cache {
             img.onload = () => resolve(img);
             img.onerror = reject;
             //ios safari 10.3 taints canvas with data urls unless crossOrigin is set to anonymous
-            console.log('useCORS', useCORS, isInlineBase64Image(src))
             if (isInlineBase64Image(src) || useCORS) {
                 img.crossOrigin = 'anonymous';
             }
