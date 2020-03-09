@@ -80,14 +80,14 @@ export class Cache {
         this._cache = {};
     }
 
-    addImage(src: string): Promise<void> {
+    addImage(src: string, img?: HTMLImageElement): Promise<void> {
         const result = Promise.resolve();
         if (this.has(src)) {
             return result;
         }
 
         if (isBlobImage(src) || isRenderable(src)) {
-            this._cache[src] = this.loadImage(src);
+            this._cache[src] = this.loadImage(src, img);
             return result;
         }
 
@@ -99,46 +99,50 @@ export class Cache {
         return this._cache[src];
     }
 
-    private async loadImage(key: string) {
-        const isSameOrigin = CacheStorage.isSameOrigin(key);
-        const useCORS =
-            !isInlineImage(key) && this._options.useCORS === true && FEATURES.SUPPORT_CORS_IMAGES && !isSameOrigin;
-        const useProxy =
-            !isInlineImage(key) &&
-            !isSameOrigin &&
-            typeof this._options.proxy === 'string' &&
-            FEATURES.SUPPORT_CORS_XHR &&
-            !useCORS;
-        if (!isSameOrigin && this._options.allowTaint === false && !isInlineImage(key) && !useProxy && !useCORS) {
-            return;
-        }
+    private async loadImage(key: string, img?: HTMLImageElement) {
+        // const isSameOrigin = CacheStorage.isSameOrigin(key);
+        // const useCORS =
+        //     !isInlineImage(key) && this._options.useCORS === true && FEATURES.SUPPORT_CORS_IMAGES && !isSameOrigin;
+        // const useProxy =
+        //     !isInlineImage(key) &&
+        //     !isSameOrigin &&
+        //     typeof this._options.proxy === 'string' &&
+        //     FEATURES.SUPPORT_CORS_XHR &&
+        //     !useCORS;
+        // if (!isSameOrigin && this._options.allowTaint === false && !isInlineImage(key) && !useProxy && !useCORS) {
+        //     return;
+        // }
 
-        let src = key;
-        if (useProxy) {
-            src = await this.proxy(src);
-        }
+        // let src = key;
+        // if (useProxy) {
+        //     src = await this.proxy(src);
+        // }
 
-        Logger.getInstance(this.id).debug(`Added image ${key.substring(0, 256)}`);
-
-        return await new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = reject;
-            //ios safari 10.3 taints canvas with data urls unless crossOrigin is set to anonymous
-            if (isInlineBase64Image(src) || useCORS) {
-                img.crossOrigin = 'anonymous';
-            }
-            img.src = src;
-            if (img.complete === true) {
-                // Inline XML images may fail to parse, throwing an Error later on
-                setTimeout(() => resolve(img), 500);
-            }
-            if (this._options.imageTimeout > 0) {
-                setTimeout(
-                    () => reject(`Timed out (${this._options.imageTimeout}ms) loading image`),
-                    this._options.imageTimeout
-                );
-            }
+        Logger.getInstance(this.id).debug(`wohhhhhaaa Added image ${key.substring(0, 256)}`);
+        return await new Promise((resolve) => {
+            // const img = new Image();
+            // img.onload = () => resolve(img);
+            // img.onerror = reject;
+            // //ios safari 10.3 taints canvas with data urls unless crossOrigin is set to anonymous
+            // if (isInlineBase64Image(src) || useCORS) {
+            //     img.crossOrigin = 'anonymous';
+            // }
+            // img.src = src;
+            // if (img.complete === true) {
+            //     // Inline XML images may fail to parse, throwing an Error later on
+            //     setTimeout(() => resolve(img), 500);
+            // }
+            // if (this._options.imageTimeout > 0) {
+            //     setTimeout(
+            //         () => reject(`Timed out (${this._options.imageTimeout}ms) loading image`),
+            //         this._options.imageTimeout
+            //     );
+            // }
+            // if(!img) {
+            //     img = new Image()
+            // }
+            // img.crossOrigin = 'anonymous'
+            resolve(img)
         });
     }
 
@@ -150,58 +154,58 @@ export class Cache {
         return Promise.resolve(Object.keys(this._cache));
     }
 
-    private proxy(src: string): Promise<string> {
-        const proxy = this._options.proxy;
+    // private proxy(src: string): Promise<string> {
+    //     const proxy = this._options.proxy;
 
-        if (!proxy) {
-            throw new Error('No proxy defined');
-        }
+    //     if (!proxy) {
+    //         throw new Error('No proxy defined');
+    //     }
 
-        const key = src.substring(0, 256);
+    //     const key = src.substring(0, 256);
 
-        return new Promise((resolve, reject) => {
-            const responseType = FEATURES.SUPPORT_RESPONSE_TYPE ? 'blob' : 'text';
-            const xhr = new XMLHttpRequest();
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    if (responseType === 'text') {
-                        resolve(xhr.response);
-                    } else {
-                        const reader = new FileReader();
-                        reader.addEventListener('load', () => resolve(reader.result as string), false);
-                        reader.addEventListener('error', e => reject(e), false);
-                        reader.readAsDataURL(xhr.response);
-                    }
-                } else {
-                    reject(`Failed to proxy resource ${key} with status code ${xhr.status}`);
-                }
-            };
+    //     return new Promise((resolve, reject) => {
+    //         const responseType = FEATURES.SUPPORT_RESPONSE_TYPE ? 'blob' : 'text';
+    //         const xhr = new XMLHttpRequest();
+    //         xhr.onload = () => {
+    //             if (xhr.status === 200) {
+    //                 if (responseType === 'text') {
+    //                     resolve(xhr.response);
+    //                 } else {
+    //                     const reader = new FileReader();
+    //                     reader.addEventListener('load', () => resolve(reader.result as string), false);
+    //                     reader.addEventListener('error', e => reject(e), false);
+    //                     reader.readAsDataURL(xhr.response);
+    //                 }
+    //             } else {
+    //                 reject(`Failed to proxy resource ${key} with status code ${xhr.status}`);
+    //             }
+    //         };
 
-            xhr.onerror = reject;
-            xhr.open('GET', `${proxy}?url=${encodeURIComponent(src)}&responseType=${responseType}`);
+    //         xhr.onerror = reject;
+    //         xhr.open('GET', `${proxy}?url=${encodeURIComponent(src)}&responseType=${responseType}`);
 
-            if (responseType !== 'text' && xhr instanceof XMLHttpRequest) {
-                xhr.responseType = responseType;
-            }
+    //         if (responseType !== 'text' && xhr instanceof XMLHttpRequest) {
+    //             xhr.responseType = responseType;
+    //         }
 
-            if (this._options.imageTimeout) {
-                const timeout = this._options.imageTimeout;
-                xhr.timeout = timeout;
-                xhr.ontimeout = () => reject(`Timed out (${timeout}ms) proxying ${key}`);
-            }
+    //         if (this._options.imageTimeout) {
+    //             const timeout = this._options.imageTimeout;
+    //             xhr.timeout = timeout;
+    //             xhr.ontimeout = () => reject(`Timed out (${timeout}ms) proxying ${key}`);
+    //         }
 
-            xhr.send();
-        });
-    }
+    //         xhr.send();
+    //     });
+    // }
 }
 
 const INLINE_SVG = /^data:image\/svg\+xml/i;
-const INLINE_BASE64 = /^data:image\/.*;base64,/i;
-const INLINE_IMG = /^data:image\/.*/i;
+// const INLINE_BASE64 = /^data:image\/.*;base64,/i;
+// const INLINE_IMG = /^data:image\/.*/i;
 
 const isRenderable = (src: string): boolean => FEATURES.SUPPORT_SVG_DRAWING || !isSVG(src);
-const isInlineImage = (src: string): boolean => INLINE_IMG.test(src);
-const isInlineBase64Image = (src: string): boolean => INLINE_BASE64.test(src);
+// const isInlineImage = (src: string): boolean => INLINE_IMG.test(src);
+// const isInlineBase64Image = (src: string): boolean => INLINE_BASE64.test(src);
 const isBlobImage = (src: string): boolean => src.substr(0, 4) === 'blob';
 
 const isSVG = (src: string): boolean => src.substr(-3).toLowerCase() === 'svg' || INLINE_SVG.test(src);

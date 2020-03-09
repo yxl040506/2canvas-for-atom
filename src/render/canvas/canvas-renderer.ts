@@ -272,6 +272,7 @@ export class CanvasRenderer {
         if (container instanceof ImageElementContainer) {
             try {
                 const image = await this.options.cache.match(container.src);
+                // console.log('image result lookhere', image)
                 this.renderReplacedElement(container, curves, image);
             } catch (e) {
                 Logger.getInstance(this.options.id).error(`Error loading image ${container.src}`);
@@ -558,11 +559,14 @@ export class CanvasRenderer {
                         image.height,
                         image.width / image.height
                     ]);
-                    const pattern = this.ctx.createPattern(
-                        this.resizeImage(image, width, height),
-                        'repeat'
-                    ) as CanvasPattern;
-                    this.renderRepeat(path, pattern, x, y);
+                    // console.log('image', image, image.parentNode, image.offsetHeight)
+                    if(image.offsetHeight !== 0) {
+                        const pattern = this.ctx.createPattern(
+                            this.resizeImage(image, width, height),
+                            'repeat'
+                        ) as CanvasPattern;
+                        this.renderRepeat(path, pattern, x, y);
+                    }
                 }
             } else if (isLinearGradient(backgroundImage)) {
                 const [path, x, y, width, height] = calculateBackgroundRendering(container, index, [null, null, null]);
@@ -581,6 +585,7 @@ export class CanvasRenderer {
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, width, height);
                 if (width > 0 && height > 0) {
+
                     const pattern = this.ctx.createPattern(canvas, 'repeat') as CanvasPattern;
                     this.renderRepeat(path, pattern, x, y);
                 }

@@ -11,6 +11,7 @@ export class ImageElementContainer extends ElementContainer {
         this.src = img.currentSrc || img.src;
         this.intrinsicWidth = img.naturalWidth;
         this.intrinsicHeight = img.naturalHeight;
-        CacheStorage.getInstance().addImage(this.src);
+        CacheStorage.getInstance().addImage(this.src, img);
+        // CacheStorage.getInstance().addImage(this.src);
     }
 }

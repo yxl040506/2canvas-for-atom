@@ -141,11 +141,11 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
 
     let canvas;
     if (options.foreignObjectRendering) {
-        Logger.getInstance(instanceName).debug(`Document cloned, using foreign object rendering`);
+        Logger.getInstance(instanceName).debug(`hahahahaDocument cloned, using foreign object rendering`);
         const renderer = new ForeignObjectRenderer(renderOptions);
         canvas = await renderer.render(element);
     } else {
-        Logger.getInstance(instanceName).debug(`Document cloned, using computed rendering`);
+        Logger.getInstance(instanceName).debug(`hahahDocument cloned, using computed rendering`);
 
         CacheStorage.attachInstance(options.cache);
         Logger.getInstance(instanceName).debug(`Starting DOM parsing`);
