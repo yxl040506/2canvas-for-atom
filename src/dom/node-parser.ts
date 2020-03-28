@@ -13,13 +13,21 @@ import {IFrameElementContainer} from './replaced-elements/iframe-element-contain
 
 const LIST_OWNERS = ['OL', 'UL', 'MENU'];
 
-const parseNodeTree = (node: Node, parent: ElementContainer, root: ElementContainer) => {
+const parseNodeTree = (
+    node: Node,
+    parent: ElementContainer,
+    root: ElementContainer,
+    ignoreElements?: (element: Element) => boolean
+) => {
     for (let childNode = node.firstChild, nextNode; childNode; childNode = nextNode) {
         nextNode = childNode.nextSibling;
 
         if (isTextNode(childNode) && childNode.data.trim().length > 0) {
             parent.textNodes.push(new TextContainer(childNode, parent.styles));
         } else if (isElementNode(childNode)) {
+            if (ignoreElements && ignoreElements(childNode)) {
+                continue;
+            }
             const container = createContainer(childNode);
             if (container.styles.isVisible()) {
                 if (createsRealStackingContext(childNode, container, root)) {
@@ -27,14 +35,12 @@ const parseNodeTree = (node: Node, parent: ElementContainer, root: ElementContai
                 } else if (createsStackingContext(container.styles)) {
                     container.flags |= FLAGS.CREATES_STACKING_CONTEXT;
                 }
-
                 if (LIST_OWNERS.indexOf(childNode.tagName) !== -1) {
                     container.flags |= FLAGS.IS_LIST_OWNER;
                 }
-
                 parent.elements.push(container);
                 if (!isTextareaElement(childNode) && !isSVGElement(childNode) && !isSelectElement(childNode)) {
-                    parseNodeTree(childNode, container, root);
+                    parseNodeTree(childNode, container, root, ignoreElements);
                 }
             }
         }
@@ -81,10 +87,10 @@ const createContainer = (element: Element): ElementContainer => {
     return new ElementContainer(element);
 };
 
-export const parseTree = (element: HTMLElement): ElementContainer => {
+export const parseTree = (element: HTMLElement, ignoreElements?: (element: Element) => boolean): ElementContainer => {
     const container = createContainer(element);
     container.flags |= FLAGS.CREATES_REAL_STACKING_CONTEXT;
-    parseNodeTree(element, container, container);
+    parseNodeTree(element, container, container, ignoreElements);
     return container;
 };
 

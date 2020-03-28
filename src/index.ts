@@ -149,7 +149,7 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
 
         CacheStorage.attachInstance(options.cache);
         Logger.getInstance(instanceName).debug(`Starting DOM parsing`);
-        const root = parseTree(element);
+        const root = parseTree(element, options.ignoreElements);
         // console.log('clonedElement', clonedElement, root);
 
         CacheStorage.detachInstance();
