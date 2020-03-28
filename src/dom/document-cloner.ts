@@ -367,6 +367,7 @@ export class DocumentCloner {
 
     static destroy(container: HTMLIFrameElement): boolean {
         if (container.parentNode) {
+            console.log('zhelima  remove', container);
             container.parentNode.removeChild(container);
             return true;
         }

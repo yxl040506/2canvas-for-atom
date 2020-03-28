@@ -12,6 +12,7 @@ const testRangeBounds = (document: Document) => {
             range.selectNode(testElement);
             const rangeBounds = range.getBoundingClientRect();
             const rangeHeight = Math.round(rangeBounds.height);
+            console.log('zhelima testElement', testElement);
             document.body.removeChild(testElement);
             if (rangeHeight === TEST_HEIGHT) {
                 return true;

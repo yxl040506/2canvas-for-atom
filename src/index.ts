@@ -172,6 +172,7 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
 
     Logger.getInstance(instanceName).debug(`Finished rendering`);
     Logger.destroy(instanceName);
+    console.log('CacheStorage zhelima ', instanceName);
     CacheStorage.destroy(instanceName);
     return canvas;
 };
