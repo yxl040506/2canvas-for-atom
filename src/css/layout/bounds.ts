@@ -1,3 +1,5 @@
+// import {isHTMLElementNode} from '../../dom/node-parser';
+export type TransformType = {translateY: number; translateX: number} | null;
 export class Bounds {
     readonly top: number;
     readonly left: number;
@@ -15,13 +17,24 @@ export class Bounds {
         return new Bounds(this.left + x, this.top + y, this.width + w, this.height + h);
     }
 
-    static fromClientRect(clientRect: ClientRect): Bounds {
+    static fromClientRect(clientRect: ClientRect, transformFromParent?: TransformType): Bounds {
+        // if (node && isHTMLElementNode(node)) {
+        if (transformFromParent) {
+            const {translateY, translateX} = transformFromParent;
+            return new Bounds(
+                clientRect.left - translateX,
+                clientRect.top - translateY,
+                clientRect.width,
+                clientRect.height
+            );
+        }
+        // }
         return new Bounds(clientRect.left, clientRect.top, clientRect.width, clientRect.height);
     }
 }
 
-export const parseBounds = (node: Element): Bounds => {
-    return Bounds.fromClientRect(node.getBoundingClientRect());
+export const parseBounds = (node: Element, transformFromFather: TransformType): Bounds => {
+    return Bounds.fromClientRect(node.getBoundingClientRect(), transformFromFather);
 };
 
 export const parseDocumentSize = (document: Document): Bounds => {
