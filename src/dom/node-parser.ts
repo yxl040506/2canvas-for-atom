@@ -12,23 +12,37 @@ import {TextareaElementContainer} from './elements/textarea-element-container';
 import {IFrameElementContainer} from './replaced-elements/iframe-element-container';
 
 const LIST_OWNERS = ['OL', 'UL', 'MENU'];
-
+import {TransformType} from '../css/layout/bounds';
 const parseNodeTree = (
     node: Node,
     parent: ElementContainer,
     root: ElementContainer,
-    ignoreElements?: (element: Element) => boolean
+    ignoreElements?: (element: Element) => boolean,
+    transformFromFather?: TransformType
 ) => {
+    if (!transformFromFather) {
+        transformFromFather = {
+            translateX: 0,
+            translateY: 0
+        };
+    }
+    const {translateX: fatherTranslateX, translateY: fatherTranslateY} = transformFromFather;
     for (let childNode = node.firstChild, nextNode; childNode; childNode = nextNode) {
+        const childStyleTransform = getTransformObj(childNode as Element);
+        const {translateX: childTranslateX, translateY: childTranslateY} = childStyleTransform;
+        const transform = {
+            translateX: childTranslateX + fatherTranslateX,
+            translateY: childTranslateY + fatherTranslateY
+        };
         nextNode = childNode.nextSibling;
 
         if (isTextNode(childNode) && childNode.data.trim().length > 0) {
-            parent.textNodes.push(new TextContainer(childNode, parent.styles));
+            parent.textNodes.push(new TextContainer(childNode, parent.styles, transform));
         } else if (isElementNode(childNode)) {
             if (ignoreElements && ignoreElements(childNode)) {
                 continue;
             }
-            const container = createContainer(childNode);
+            const container = createContainer(childNode, transform);
             if (container.styles.isVisible()) {
                 if (createsRealStackingContext(childNode, container, root)) {
                     container.flags |= FLAGS.CREATES_REAL_STACKING_CONTEXT;
@@ -40,57 +54,95 @@ const parseNodeTree = (
                 }
                 parent.elements.push(container);
                 if (!isTextareaElement(childNode) && !isSVGElement(childNode) && !isSelectElement(childNode)) {
-                    parseNodeTree(childNode, container, root, ignoreElements);
+                    parseNodeTree(childNode, container, root, ignoreElements, transform);
                 }
             }
+            resetTransformAfterParse(container);
         }
     }
 };
+export const formatTransform = (matrix: string) => {
+    const pattern = /\((.*)\)/;
+    const result = pattern.exec(matrix);
+    if (result && result[1]) {
+        const transform = result[1].split(',');
+        const translateX = Number(transform[4]);
+        const translateY = Number(transform[5]);
+        return {translateX, translateY};
+    }
+    return {translateX: 0, translateY: 0};
+};
 
-const createContainer = (element: Element): ElementContainer => {
+const resetTransformAfterParse = (container: ElementContainer) => {
+    try {
+        // if (container.cacheTransform !== null && isHTMLElementNode(container.element)) {
+        //     // getBoundingClientRect takes transforms into account
+        //     container.element.style.transform = container.cacheTransform;
+        // }
+        if (container.cacheTransition !== null && isHTMLElementNode(container.element)) {
+            // getBoundingClientRect takes transforms into account
+            container.element.style.transition = container.cacheTransition;
+        }
+    } catch (err) {
+        console.log('err in resetTransformAfterParse', err);
+    }
+};
+
+const createContainer = (element: Element, transform: TransformType): ElementContainer => {
     if (isImageElement(element)) {
-        return new ImageElementContainer(element);
+        return new ImageElementContainer(element, transform);
     }
 
     if (isCanvasElement(element)) {
-        return new CanvasElementContainer(element);
+        return new CanvasElementContainer(element, transform);
     }
 
     if (isSVGElement(element)) {
-        return new SVGElementContainer(element);
+        return new SVGElementContainer(element, transform);
     }
 
     if (isLIElement(element)) {
-        return new LIElementContainer(element);
+        return new LIElementContainer(element, transform);
     }
 
     if (isOLElement(element)) {
-        return new OLElementContainer(element);
+        return new OLElementContainer(element, transform);
     }
 
     if (isInputElement(element)) {
-        return new InputElementContainer(element);
+        return new InputElementContainer(element, transform);
     }
 
     if (isSelectElement(element)) {
-        return new SelectElementContainer(element);
+        return new SelectElementContainer(element, transform);
     }
 
     if (isTextareaElement(element)) {
-        return new TextareaElementContainer(element);
+        return new TextareaElementContainer(element, transform);
     }
 
     if (isIFrameElement(element)) {
-        return new IFrameElementContainer(element);
+        return new IFrameElementContainer(element, transform);
     }
 
-    return new ElementContainer(element);
+    return new ElementContainer(element, transform);
+};
+
+export const getTransformObj = (element: Element) => {
+    let transformStr = '';
+    if (element instanceof Element) {
+        transformStr = window.getComputedStyle(element)['transform'] || '';
+    }
+    const transform = formatTransform(transformStr);
+    return transform;
 };
 
 export const parseTree = (element: HTMLElement, ignoreElements?: (element: Element) => boolean): ElementContainer => {
-    const container = createContainer(element);
+    const transformObject = getTransformObj(element);
+    const container = createContainer(element, transformObject);
     container.flags |= FLAGS.CREATES_REAL_STACKING_CONTEXT;
-    parseNodeTree(element, container, container, ignoreElements);
+    parseNodeTree(element, container, container, ignoreElements, transformObject);
+    resetTransformAfterParse(container);
     return container;
 };
 

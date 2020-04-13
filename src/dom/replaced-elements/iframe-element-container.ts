@@ -2,6 +2,7 @@ import {ElementContainer} from '../element-container';
 import {parseTree} from '../node-parser';
 import {Color, color, COLORS, isTransparent} from '../../css/types/color';
 import {Parser} from '../../css/syntax/parser';
+import {TransformType} from '../../css/layout/bounds';
 
 const parseColor = (value: string): Color => color.parse(Parser.create(value).parseComponentValue());
 
@@ -12,8 +13,8 @@ export class IFrameElementContainer extends ElementContainer {
     tree?: ElementContainer;
     backgroundColor: Color;
 
-    constructor(iframe: HTMLIFrameElement) {
-        super(iframe);
+    constructor(iframe: HTMLIFrameElement, transformFromFather: TransformType) {
+        super(iframe, transformFromFather);
         this.src = iframe.src;
         this.width = parseInt(iframe.width, 10) || 0;
         this.height = parseInt(iframe.height, 10) || 0;

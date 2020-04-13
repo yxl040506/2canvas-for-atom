@@ -4,7 +4,7 @@ import {BACKGROUND_CLIP} from '../../css/property-descriptors/background-clip';
 import {BACKGROUND_ORIGIN} from '../../css/property-descriptors/background-origin';
 import {TokenType} from '../../css/syntax/tokenizer';
 import {LengthPercentageTuple} from '../../css/types/length-percentage';
-import {Bounds} from '../../css/layout/bounds';
+import {Bounds, TransformType} from '../../css/layout/bounds';
 
 const CHECKBOX_BORDER_RADIUS: LengthPercentageTuple = [
     {
@@ -48,8 +48,8 @@ export class InputElementContainer extends ElementContainer {
     readonly checked: boolean;
     readonly value: string;
 
-    constructor(input: HTMLInputElement) {
-        super(input);
+    constructor(input: HTMLInputElement, transformFromFather: TransformType) {
+        super(input, transformFromFather);
         this.type = input.type.toLowerCase();
         this.checked = input.checked;
         this.value = getInputValue(input);

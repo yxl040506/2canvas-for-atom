@@ -45,21 +45,6 @@ export class ElementPaint {
             const offsetX = element.bounds.left + element.styles.transformOrigin[0].number;
             const offsetY = element.bounds.top + element.styles.transformOrigin[1].number;
             const matrix = element.styles.transform;
-            const temp = matrix.concat();
-            const matrix4 = temp[4];
-            const matrix5 = temp[5];
-            console.log(
-                'TransformEffect',
-                element.bounds.left,
-                element.styles.transformOrigin[0].number,
-                element.styles.transform,
-                'matrix4',
-                matrix4,
-                'matrix5',
-                matrix5
-            );
-            matrix[4] -= matrix4;
-            matrix[5] -= matrix5;
             this.effects.push(new TransformEffect(offsetX, offsetY, matrix));
         }
 

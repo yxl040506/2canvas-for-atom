@@ -3,7 +3,7 @@ import {parseBounds, parseDocumentSize} from './css/layout/bounds';
 // import {color, Color} from './css/types/color';
 // import {Parser} from './css/syntax/parser';
 import {CloneOptions} from './dom/document-cloner';
-import {isBodyElement, isHTMLElement, parseTree} from './dom/node-parser';
+import {isBodyElement, isHTMLElement, parseTree, getTransformObj} from './dom/node-parser';
 import {Logger} from './core/logger';
 import {CacheStorage, ResourceOptions} from './core/cache-storage';
 import {CanvasRenderer, RenderOptions} from './render/canvas/canvas-renderer';
@@ -47,8 +47,12 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
 
     const instanceName = (Math.round(Math.random() * 1000) + Date.now()).toString(16);
 
+    const transform = getTransformObj(element);
+
     const {width, height, left, top} =
-        isBodyElement(element) || isHTMLElement(element) ? parseDocumentSize(ownerDocument) : parseBounds(element);
+        isBodyElement(element) || isHTMLElement(element)
+            ? parseDocumentSize(ownerDocument)
+            : parseBounds(element, transform);
 
     const defaultResourceOptions = {
         allowTaint: false,
@@ -150,7 +154,6 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
         CacheStorage.attachInstance(options.cache);
         Logger.getInstance(instanceName).debug(`Starting DOM parsing`);
         const root = parseTree(element, options.ignoreElements);
-        // console.log('clonedElement', clonedElement, root);
 
         CacheStorage.detachInstance();
 
@@ -172,7 +175,6 @@ const renderElement = async (element: HTMLElement, opts: Partial<Options>): Prom
 
     Logger.getInstance(instanceName).debug(`Finished rendering`);
     Logger.destroy(instanceName);
-    console.log('CacheStorage zhelima ', instanceName);
     CacheStorage.destroy(instanceName);
     return canvas;
 };
