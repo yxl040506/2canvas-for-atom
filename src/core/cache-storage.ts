@@ -112,8 +112,6 @@ export class Cache {
         if (!isSameOrigin && this._options.allowTaint === false && !isInlineImage(key) && !useProxy && !useCORS) {
             return;
         }
-
-       
         let src = key;
         if (useProxy) {
             src = await this.proxy(src);
@@ -121,16 +119,15 @@ export class Cache {
 
         Logger.getInstance(this.id).debug(`wohhhhhaaa Added image ${key.substring(0, 256)}`);
         return await new Promise((resolve, reject) => {
-            if(imgHtmlEle) {
-                if(imgHtmlEle.getAttribute('crossorigin') === 'anonymous') {
-                    if(!imgHtmlEle) {
-                        imgHtmlEle = new Image()
+            if (imgHtmlEle) {
+                if (imgHtmlEle.getAttribute('crossorigin') === 'anonymous') {
+                    if (!imgHtmlEle) {
+                        imgHtmlEle = new Image();
                     }
-                    resolve(imgHtmlEle)
-                    return
+                    resolve(imgHtmlEle);
+                    return;
                 }
             }
-            
             const img = new Image();
             img.onload = () => resolve(img);
             img.onerror = reject;

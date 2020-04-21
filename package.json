@@ -6,7 +6,7 @@
   "module": "dist/html2canvas.esm.js",
   "typings": "dist/types/index.d.ts",
   "browser": "dist/html2canvas.js",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "author": {
     "name": "liuxinyi12"
   },
