@@ -133,7 +133,7 @@ export class Cache {
             if (img.complete === true) {
                 // Inline XML images may fail to parse, throwing an Error later on
                 // setTimeout(() => resolve(img),100);
-                resolve(img)
+                resolve(img);
             }
             if (this._options.imageTimeout > 0) {
                 setTimeout(

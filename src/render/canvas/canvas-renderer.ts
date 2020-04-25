@@ -552,15 +552,13 @@ export class CanvasRenderer {
                 } catch (e) {
                     Logger.getInstance(this.options.id).error(`Error loading background-image ${url}`);
                 }
-
                 if (image) {
                     const [path, x, y, width, height] = calculateBackgroundRendering(container, index, [
                         image.width,
                         image.height,
                         image.width / image.height
                     ]);
-                    // console.log('image', image, image.parentNode, image.offsetHeight)
-                    if(image.offsetHeight !== 0) {
+                    if (image.offsetHeight !== 0 || image.height !== 0) {
                         const pattern = this.ctx.createPattern(
                             this.resizeImage(image, width, height),
                             'repeat'
@@ -585,7 +583,6 @@ export class CanvasRenderer {
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, width, height);
                 if (width > 0 && height > 0) {
-
                     const pattern = this.ctx.createPattern(canvas, 'repeat') as CanvasPattern;
                     this.renderRepeat(path, pattern, x, y);
                 }
