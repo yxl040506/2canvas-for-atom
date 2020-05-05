@@ -6,6 +6,7 @@ import {BORDER_STYLE} from '../../css/property-descriptors/border-style';
 import {CSSParsedDeclaration} from '../../css/index';
 import {TextContainer} from '../../dom/text-container';
 import {Path, transformPath} from '../path';
+// import {Path} from '../path';
 import {BACKGROUND_CLIP} from '../../css/property-descriptors/background-clip';
 import {BoundCurves, calculateBorderBoxPath, calculateContentBoxPath, calculatePaddingBoxPath} from '../bound-curves';
 import {isBezierCurve} from '../bezier-curve';
@@ -58,7 +59,7 @@ export interface RenderOptions {
     cache: Cache;
 }
 
-const MASK_OFFSET = 10000;
+const MASK_OFFSET = 0;
 
 export class CanvasRenderer {
     canvas: HTMLCanvasElement;
@@ -437,6 +438,7 @@ export class CanvasRenderer {
         // https://www.w3.org/TR/css-position-3/#painting-order
         // 1. the background and borders of the element forming the stacking context.
         await this.renderNodeBackgroundAndBorders(stack.element);
+
         // 2. the child stacking contexts with negative stack levels (most negative first).
         for (const child of stack.negativeZIndex) {
             await this.renderStack(child);
@@ -506,7 +508,6 @@ export class CanvasRenderer {
             } else {
                 this.ctx.lineTo(start.x, start.y);
             }
-
             if (isBezierCurve(point)) {
                 this.ctx.bezierCurveTo(
                     point.startControl.x,
@@ -665,23 +666,22 @@ export class CanvasRenderer {
             await this.renderBackgroundImage(paint.container);
 
             this.ctx.restore();
-
             styles.boxShadow
                 .slice(0)
                 .reverse()
                 .forEach(shadow => {
                     this.ctx.save();
+                    const inset = shadow.inset;
                     const borderBoxArea = calculateBorderBoxPath(paint.curves);
-                    const maskOffset = shadow.inset ? 0 : MASK_OFFSET;
+                    const maskOffset = inset ? 0 : MASK_OFFSET;
                     const shadowPaintingArea = transformPath(
                         borderBoxArea,
-                        -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number,
-                        (shadow.inset ? 1 : -1) * shadow.spread.number,
-                        shadow.spread.number * (shadow.inset ? -2 : 2),
-                        shadow.spread.number * (shadow.inset ? -2 : 2)
+                        -maskOffset + (inset ? 1 : -1) * shadow.spread.number + shadow.offsetX.number,
+                        (inset ? 1 : -1) * shadow.spread.number + shadow.offsetY.number,
+                        shadow.spread.number * (inset ? -2 : 2),
+                        shadow.spread.number * (inset ? -2 : 2)
                     );
-
-                    if (shadow.inset) {
+                    if (inset) {
                         this.path(borderBoxArea);
                         this.ctx.clip();
                         this.mask(shadowPaintingArea);
@@ -690,13 +690,18 @@ export class CanvasRenderer {
                         this.ctx.clip();
                         this.path(shadowPaintingArea);
                     }
-
-                    this.ctx.shadowOffsetX = shadow.offsetX.number + maskOffset;
-                    this.ctx.shadowOffsetY = shadow.offsetY.number;
-                    this.ctx.shadowColor = asString(shadow.color);
-                    this.ctx.shadowBlur = shadow.blur.number;
-                    this.ctx.fillStyle = shadow.inset ? asString(shadow.color) : 'rgba(0,0,0,1)';
-
+                    if (shadow.blur.number > 0) {
+                        // this.ctx.shadowOffsetX = shadow.offsetX.number * window.devicePixelRatio;
+                        // this.ctx.shadowOffsetY = shadow.offsetY.number * window.devicePixelRatio;
+                        // this.ctx.shadowOffsetX = 0;
+                        // this.ctx.shadowOffsetY = 0;
+                        // this.ctx.shadowColor = asString(shadow.color);
+                        // this.ctx.shadowBlur = shadow.blur.number * window.devicePixelRatio;
+                        this.ctx.filter = `blur(${shadow.blur.number}px)`;
+                    }
+                    // this.ctx.globalCompositeOperation = 'destination-over';
+                    this.ctx.fillStyle = asString(shadow.color);
+                    // this.ctx.fillStyle = 'white';
                     this.ctx.fill();
                     this.ctx.restore();
                 });
